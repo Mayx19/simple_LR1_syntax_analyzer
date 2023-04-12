@@ -1,0 +1,8 @@
+libsodium-win64/bin/libsodium-23.def
+libsodium-win64/bin/libsodium-23.dll
+libsodium-win64/lib/libsodium.dll.a
+libsodium-win64/lib/libsodium.la
+libsodium-win64/lib/pkgconfig/libsodium.pc
+data_process.c
+data_process.h
+mem_printer.h
