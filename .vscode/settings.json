@@ -1,0 +1,15 @@
+{
+    "C_Cpp.errorSquiggles": "Disabled",
+    "files.associations": {
+        "iosfwd": "c",
+        "xstring": "c",
+        "xutility": "c",
+        "syntax.h": "c",
+        "stdint.h": "c",
+        "stdlib.h": "c",
+        "queue.h": "c",
+        "stdio.h": "c",
+        "hashmap.h": "c",
+        "iterator": "c"
+    }
+}
