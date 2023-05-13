@@ -1,6 +1,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "../container/queue.h"
 #include "../container/stack.h"
 #include "../container/hashmap.h"
@@ -43,7 +44,7 @@ struct _act
 
 struct _v
 {
-    char type;
+    char type;// 0 :Terminal symbols,1: non-terminal symbols
     uint id;
 } typedef _v;
 
@@ -94,7 +95,7 @@ uint32 ihash(void *a);
 
 void _firstmap_prod(_syntax *g, char *first);
 
-uint LR1(_syntax *g, _act *action_goto);
+uint LR1(_syntax *g, _act *action_goto,int cnm);
 
 int compare(const void *a, const void *b);
 
@@ -104,7 +105,7 @@ int prod_encode(_syntax *g, int prod_id, int pos, int suffix);
 
 void prod_decode(_syntax *g, int code, int *prod_id, int *pos, int *suffix);
 
-void _closure(_syntax *g, int *res, int *n);
+void _closure(_syntax *g, int *res, int *closure_size, const char *null_vn);
 
 uint32 print_prod(_syntax *g, const uint32 p, const uint32 p_i);
 
@@ -118,9 +119,9 @@ char *syntax_t_get_v(_syntax *g, uint32 i, char type);
 
 void update_action_goto_r(_syntax *g, _i *it, char *first, _act *action_goto);
 
-char * merge_single_chain(_syntax *syntax, _act *act_go_map, uint i_count,char ** shortcut_str_res);
+uint merge_single_chain(_syntax *syntax, _act *act_go_map, uint i_count,uint ** shortcut_str_res);
 
-void print_action_goto_table(_syntax *syntax, _act *act_go_map);
+void print_action_goto_table(_syntax *syntax, _act *act_go_map, uint i_count);
 
 void syntax_analysis(
     _syntax *syntax,

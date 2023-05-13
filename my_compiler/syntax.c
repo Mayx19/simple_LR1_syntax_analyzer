@@ -1,6 +1,5 @@
 #include "syntax.h"
 #include "stdio.h"
-
 #define _PROD_R_LEN_DEFAULT 16
 
 _act *new_act(char type, uint id, uint vt, _act *next)
@@ -42,13 +41,94 @@ uint32 ihash(void *a)
     {
         hash = ia->ptr[i] + (hash << 6) + (hash << 16) - hash;
     }
+    stack *s = new_stack(32, int);
     return hash;
 }
 
 void next_map(_syntax *g, char *first)
 {
 }
-
+char *get_null_list(_syntax *g)
+{
+    printf("nmnmnm\n");
+    _init_new_arr(null_list, char, g->vn_len, -1);
+    stack *s = new_stack(32, int);
+    int i, prod_id, curr, find = 0, prod_len;
+    for (i = 0; i < g->vn_len; i++)
+        spush(s, i);
+    while (!stack_empty(s))
+    {
+        curr = *((int *)stack_top(s));
+        printf("nm %d", curr);
+        if (null_list[curr] < 0)
+        {
+            null_list[curr] = 2;
+            for (prod_id = 0; prod_id < prod_len; prod_id++)
+            {
+                _prod prod = g->prod[prod_id];
+                if (g->prod[prod_id].l == curr)
+                {
+                    if (prod.r_len == 0)
+                    {
+                        null_list[curr] = 1;
+                        prod_id = prod_len;
+                        print_prod(g, prod_id, -1);
+                        break;
+                    }
+                    else
+                    {
+                        for (i = 0; i < prod.r_len; i++)
+                        {
+                            _v v = prod.r[i];
+                            if (v.type == 0)
+                            {
+                                null_list[curr] = 1;
+                                prod_id = prod_len;
+                                break;
+                            }
+                            else
+                            {
+                                if (null_list[v.id] == 0 || null_list[v.id] == 2)
+                                    continue;
+                                else if (null_list[v.id] == -1)
+                                {
+                                    spush(s, curr);
+                                    prod_id = prod_len;
+                                    break;
+                                }
+                                else if (null_list[v.id] == 1)
+                                {
+                                    null_list[curr] = 1;
+                                    prod_id = prod_len;
+                                    break;
+                                }
+                            }
+                        }
+                        if (i == prod.r_len)
+                        {
+                            null_list[curr] = 1;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (prod_id == prod_len)
+            {
+                null_list[curr] = 1;
+                stack_pop(s);
+            }
+        }
+        else
+        {
+            stack_pop(s);
+        }
+    }
+    for (i = 0; i < g->vn_len; i++)
+    {
+        printf("%s %d\n", syntax_t_get_v(g, i, 1), null_list[i]);
+    }
+    return null_list;
+}
 void _firstmap_prod(_syntax *g, char *first)
 {
     int
@@ -59,6 +139,7 @@ void _firstmap_prod(_syntax *g, char *first)
     _v v;
 
     _init_new_arr(flag, char, prod_len *mx, 0);
+
     stack *s = new_stack(32, int);
     int prl = g->prod[prod_id].r_len;
     first[prod_encode(g, prod_id, prl, 0)] = 1;
@@ -189,12 +270,12 @@ void _firstmap_prod(_syntax *g, char *first)
 #endif
 }
 
-#define add_i_temp                         \
-    _closure(g, curr_ptr, &curr_prod_len); \
-    if (ilen >= ilist_capacity)            \
-        _double_len(_i, ilist);            \
-    ilist[ilen].ptr = curr_ptr;            \
-    ilist[ilen].n = curr_prod_len;         \
+#define add_i_temp                                  \
+    _closure(g, curr_ptr, &curr_prod_len, null_vn); \
+    if (ilen >= ilist_capacity)                     \
+        _double_len(_i, ilist);                     \
+    ilist[ilen].ptr = curr_ptr;                     \
+    ilist[ilen].n = curr_prod_len;                  \
     ilist[ilen].id = ilen;
 
 #define add_i_submit                     \
@@ -205,7 +286,7 @@ void _firstmap_prod(_syntax *g, char *first)
 
 #define _ILIST_INIT_CAPACITY_ 1024
 
-uint LR1(_syntax *g, _act *action_goto)
+uint LR1(_syntax *g, _act *action_goto, int cnm)
 {
 #ifdef PRINT_NODE
     FILE *node_str = fopen("./demo/nodes.js", "w");
@@ -223,6 +304,8 @@ uint LR1(_syntax *g, _act *action_goto)
     int mx = max((g->prod_len) * g->prod_r_max_len, vl);
 
     int target;
+    // mark null vn
+    char *null_vn = cnm ? get_null_list(g) : NULL;
 
     int first_len = mx * g->prod_len * max(g->prod_len * g->prod_r_max_len, vl) + 1024;
     _init_new_arr(first, char, first_len, 0);
@@ -271,8 +354,8 @@ uint LR1(_syntax *g, _act *action_goto)
                 code = *(curr_i->ptr + i);
                 prod_decode(g, code, &prod_id, &pos, &suffix);
 
-                if (pos < p[prod_id].r_len &&
-                    ((p[prod_id].r[pos].type ? (vt_len) : 0) + p[prod_id].r[pos].id) == j)
+                if ((pos < p[prod_id].r_len &&
+                     ((p[prod_id].r[pos].type ? (vt_len) : 0) + p[prod_id].r[pos].id) == j)) //||(p[prod_id].r[pos].type&&null_vn[p[prod_id].r[pos]])
                 {
                     int new_code = prod_encode(g, prod_id, pos + 1, suffix);
                     // debug codes ,don't delete this
@@ -357,7 +440,7 @@ uint LR1(_syntax *g, _act *action_goto)
             prod_decode(g, *(it.ptr + j), &prod_id, &pos, &suffix);
             print_prod(g, prod_id, pos);
             sprint_prod(test_str, g, suffix % prod_len, suffix / prod_len);
-            printf(";FIRST(%s)\n", test_str);
+            printf(";\tFIRST(%s)\n", test_str);
         }
         printf("\n");
     }
@@ -405,8 +488,14 @@ void update_action_goto_r(_syntax *g, _i *it, char *first, _act *action_goto)
         IFDEBUG
         {
             print_prod(g, prod_id, pos);
-            for (int k = 0; k < g->vt_len; k++)
-                printf("%d", suffix_temp[k]);
+            // for (int k = 0; k < g->vt_len; k++)
+            //     printf("%d", suffix_temp[k]);
+            printf(" \t:|");
+            if (suffix_temp[0])
+                printf("#|");
+            for (int k = 1; k < g->vt_len; k++)
+                if (suffix_temp[k])
+                    printf("%s|", g->vt[k]);
             printf("\n");
         }
 
@@ -479,8 +568,12 @@ void node_json(_syntax *g, _i *ilist, int ilen, char *first, FILE *node_str)
             IFDEBUG
             {
                 print_prod(g, prod_id, pos);
-                for (int k = 0; k < g->vt_len; k++)
-                    printf("%d", suffix_temp[k]);
+                printf(" \t:|");
+                if (suffix_temp[0])
+                    printf("#|");
+                for (int k = 1; k < g->vt_len; k++)
+                    if (suffix_temp[k])
+                        printf("%s|", g->vt[k]);
                 printf("\n");
             }
             // print prod
@@ -544,9 +637,26 @@ void prod_decode(_syntax *g, int code, int *prod_id, int *pos, int *suffix)
     *pos = t / g->prod_len;
     // printf("(%d*%d+%d)*%d+%d\n", *pos, g->prod_len, *prod_id, max(g->prod_len * g->prod_r_max_len, (g->vn_len + g->vt_len)), *suffix);
 }
-
+#ifdef DEBUG
+#define _closure_add_log                                                \
+    printf("    [ADD ");                                                \
+    print_prod(g, n_prod_id, n_pos);                                    \
+    sprint_prod(test_str, g, n_suffix % prod_len, n_suffix / prod_len); \
+    printf("\tsuffix =  FIRST(%s)] code=%d at stack %d\n", test_str, next, n_temp);
+#else
+#define _closure_add_log
+#endif
+#define _add_to_closure                                    \
+    int next = prod_encode(g, n_prod_id, n_pos, n_suffix); \
+    _lengthen_to(char, map, next);                         \
+    if (!map[next])                                        \
+    {                                                      \
+        _closure_add_log;                                  \
+        res[n_temp++] = next;                              \
+        map[next] = 1;                                     \
+    }
 // get closure set
-void _closure(_syntax *g, int *res, int *n)
+void _closure(_syntax *g, int *res, int *closure_size, const char *null_vn)
 {
     _prod *p = g->prod;
     int prod_len = (g->prod_len);
@@ -556,7 +666,7 @@ void _closure(_syntax *g, int *res, int *n)
 
     new_auto_arr(map, char, 4096, 0);
     //防止重复
-    int n_temp = *n;
+    int n_temp = *closure_size;
 #ifdef DEBUG
     char test_str[100];
     printf("CLOSURE{----------------\n");
@@ -575,15 +685,20 @@ void _closure(_syntax *g, int *res, int *n)
 #ifdef DEBUG
         printf("at stack %d =%d;", i, res[i]);
         print_prod(g, prod_id, pos);
-        printf("suffix: %d ", suffix);
-
         sprint_prod(test_str, g, suffix % prod_len, suffix / prod_len);
-        printf(";FIRST(%s)\n", test_str);
+        printf("\tsuffix[%d]: FIRST(%s)\n", suffix, test_str);
 #endif
         //非终结符
         if (pos < p[prod_id].r_len && p[prod_id].r[pos].type)
         {
             _v curr = p[prod_id].r[pos];
+            // if (null_vn && null_vn[curr.id])
+            // {
+            //     n_prod_id = prod_id;
+            //     n_pos = pos + 1;
+            //     n_suffix = suffix;
+            //     _add_to_closure
+            // }
             //查生成表
             for (int j = 0; j < prod_len; j++)
             {
@@ -593,41 +708,31 @@ void _closure(_syntax *g, int *res, int *n)
                     {
                         n_prod_id = j;
                         n_pos = 0;
-                        if (pos + 1 == p[prod_id].r_len) //如果在产生式尾部
-                            n_suffix = suffix;
+                        if (null_vn)
+                        {
+                            int suffix_pos = pos;
+                            do
+                            {
+                                n_suffix = (suffix_pos + 1 == p[prod_id].r_len) ? suffix //如果在产生式尾部
+                                                                                : (suffix_pos + 1) * prod_len + prod_id;
+                                curr = p[prod_id].r[suffix_pos++];
+                                _add_to_closure;
+                            } while (suffix_pos < p[prod_id].r_len && (curr.type == 1 && null_vn[curr.id]));
+                        }
                         else
                         {
-
-                            int follow = (pos + 1) * prod_len + prod_id;
-                            n_suffix = follow;
+                            n_suffix = (pos + 1 == p[prod_id].r_len) ? suffix //如果在产生式尾部
+                                                                     : (pos + 1) * prod_len + prod_id;
                             // printf("follow =  FIRST(%s) ", syntax_get_v(g, follow));
+                            _add_to_closure
                         }
-                    }
-                    /*else
-                    {
-                        n_prod_id = prod_id;
-                        n_pos = pos + 1;
-                        n_suffix = suffix;
-                    }*/
-                    int next = prod_encode(g, n_prod_id, n_pos, n_suffix);
-                    _lengthen_to(char, map, next);
-                    if (!map[next])
-                    {
-#ifdef DEBUG
-                        printf("    [ADD ");
-                        print_prod(g, n_prod_id, n_pos);
-                        sprint_prod(test_str, g, n_suffix % prod_len, n_suffix / prod_len);
-                        printf("suffix =  FIRST(%s)] code=%d at stack %d\n", test_str, next, n_temp);
-#endif
-                        res[n_temp++] = next;
-                        map[next] = 1;
                     }
                 }
             }
         }
     }
     qsort(res, n_temp, sizeof(int), compare);
-    *n = n_temp;
+    *closure_size = n_temp;
     free(map);
 #ifdef DEBUG
     printf("------------------------}\n");
@@ -638,7 +743,7 @@ uint32 print_prod(_syntax *g, const uint32 p, const uint32 p_i)
 {
     uint32 pos = 0;
     _prod prod = g->prod[p];
-    pos += printf("%s -> ", g->vn[prod.l]);
+    pos += printf("%s->", g->vn[prod.l]);
     int i = 0;
 
     for (; i < prod.r_len; i++)
@@ -693,11 +798,11 @@ char *syntax_t_get_v(_syntax *g, uint32 i, char type)
 
 struct _shorten_chain_temp
 {
-    uint vt, in, out, vt;
+    uint vt, in, out;
     _act *act;
 };
 
-char *merge_single_chain(_syntax *syntax, _act *act_go_map, uint i_count, char **shortcut_str_res)
+uint merge_single_chain(_syntax *syntax, _act *act_go_map, uint i_count, uint **shortcut_str_res)
 {
 
     int row_len = syntax->vn_len + syntax->vt_len;
@@ -709,7 +814,7 @@ char *merge_single_chain(_syntax *syntax, _act *act_go_map, uint i_count, char *
     {
         for (int j = 0; j < row_len; j++)
         {
-            iter = act_go_map[i * row_len + j];
+            iter = &act_go_map[i * row_len + j];
             do
             {
                 if (iter->type)

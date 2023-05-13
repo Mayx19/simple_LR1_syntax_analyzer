@@ -13,7 +13,7 @@ typedef unsigned char uint8;
 typedef unsigned short uint16;
 typedef unsigned int uint32;
 typedef unsigned long long uint64;
-
+typedef unsigned int uint;
 #define char_null 0
 #define int_null 0
 #define long_null 0
@@ -52,7 +52,7 @@ typedef unsigned long long uint64;
     memset((arr_name), (v), sizeof(type) * (size));         \
     uint arr_name##_capacity = size;
 
-#define init_auto_arr(arr_name, type, size, v)         \
+#define init_auto_arr(arr_name, type, size, v)        \
     arr_name = (type *)malloc(sizeof(type) * (size)); \
     memset((arr_name), (v), sizeof(type) * (size));   \
     arr_name##_capacity = size;
@@ -67,7 +67,9 @@ typedef unsigned long long uint64;
     uint arr_name##_len = 1;
 
 #define prealloc_new(arr_name) arr_nam+([arr_name##_len++)
-
+#define _new_arr(arr_name, type, n, v)                     \
+    type *(arr_name) = (type *)malloc(sizeof(type) * (n)); \
+    memset((arr_name), (v), sizeof(type) * (n));
 #define _init_new_arr(arr_name, type, n, v)                \
     type *(arr_name) = (type *)malloc(sizeof(type) * (n)); \
     memset((arr_name), (v), sizeof(type) * (n));
@@ -85,7 +87,7 @@ typedef unsigned long long uint64;
 #define GC_LIST_MODE GC_LIST_MODE_RUNTIME
 
 #define log(a) printf(a)
-
+// rol qword ptr [arrayD], 32
 #define _swap(type, a, b)   \
     {                       \
         type __swap_temp__; \
@@ -93,6 +95,11 @@ typedef unsigned long long uint64;
         a = b;              \
         b = __swap_temp__;  \
     }
+
+#define _xchg(a, b)           \
+    asm volatile("xchg %0,%1" \
+                 : "=r"(a)    \
+                 : "r"(b), "r"(a))
 
 #define _lengthen_to(type, arr, pos)                                                 \
     if (arr##_capacity < (pos))                                                      \
@@ -120,7 +127,7 @@ typedef unsigned long long uint64;
 
 #define auto_arr_set(type, arr_name, pos, value) \
     {                                            \
-        int __t_pos__ = (pos);                   \
+        uint __t_pos__ = (pos);                  \
         _lengthen_to(char, arr_name, __t_pos__); \
         arr_name[__t_pos__] = (value);           \
     }
@@ -152,7 +159,7 @@ struct gc_node
 #define gc_list_reset(list, type)                                                                        \
     {                                                                                                    \
         gc_node *__gc_node_head_temp2__ = (gc_node *)list;                                               \
-        if (__gc_node_head_temp2__->len >__gc_node_head_temp2__->first)                                                         \
+        if (__gc_node_head_temp2__->len > __gc_node_head_temp2__->first)                                 \
         {                                                                                                \
             if (!GC_LIST_MODE)                                                                           \
                 memset(                                                                                  \
@@ -175,7 +182,7 @@ struct gc_node
         {                                                                                        \
             if (__gc_node_head_temp__->next)                                                     \
             {                                                                                    \
-                list = (type *)__gc_node_head_temp__->next;                                              \
+                list = (type *)__gc_node_head_temp__->next;                                      \
                 gc_list_reset(list, type);                                                       \
             }                                                                                    \
             else                                                                                 \
