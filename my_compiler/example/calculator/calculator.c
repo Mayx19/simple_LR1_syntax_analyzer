@@ -1,3 +1,4 @@
+#define DEBUG
 #include "syntax.h"
 #include "calculator.h"
 #include <stdio.h>
@@ -5,26 +6,21 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
-//#define DEBUG
 
-#ifdef DEBUG
-#define IFDEBUG 
-#else
-#define IFDEBUG if (0)
-#endif
 _hashmap *vmap;
 int vn = 1;
 
-_vt *simple_vt(char **str_arr, int len)
+char **simple_v(char **str_arr, int len, char type)
 {
 
-    _vt *res = new_array(_vt, len + 1);
-    for (int i = 1; i <= len; i++)
+    char **res = new_arr(char *, len + 1);
+    for (int i = 1 - type; i <= len - type; i++)
     {
-        res[i].type = 0;
-        res[i].patten.ch = align_left(str_arr[i - 1], 0);
-        hput(vmap, res[i].patten.ch, i);
-        // printf("t'%d %s %d'",res[i].patten.ch,res[i].patten.ch,hget(vmap,res[i].patten.ch));
+        res[i] = align_left(str_arr[i - 1 + type], 0);
+        _v v = {type, i};
+        long *vl = (long *)&v;
+
+        hput(vmap, res[i], *vl);
     }
     vn = len;
     return res;
@@ -43,6 +39,7 @@ uint32 char_cmp(void *a, void *b)
 int main(int argc, const char **argv[])
 {
     FILE *fp;
+    _v v;
     char line[128];
     _syntax *syntax = _new(_syntax);
     int result, prod_arr_size = 0, pos = 0;
@@ -50,24 +47,20 @@ int main(int argc, const char **argv[])
     vmap->compare = char_cmp;
     vmap->hash = char_hash;
     // printf("read  %s\n\n",argv[0]);
-    if (fp = fopen("D:/a.txt", "r"))
+    if (fp = fopen("./a.txt", "r"))
     { //(char*)argv[i],
 
         // read vt
         fgets(line, sizeof(line), fp);
         int split_len;
         char **simp = split(line, ",", &split_len);
-        syntax->vt = simple_vt(simp, split_len);
-        syntax->vt_len = split_len;
+        syntax->vt = simple_v(simp, split_len, 0);
+        syntax->vt_len = split_len+1;
         // read vn
         fgets(line, sizeof(line), fp);
-        syntax->vn = (void **)split(line, ",", &split_len);
+        simp = split(line, ",", &split_len);
+        syntax->vn = simple_v(simp, split_len, 1);
         syntax->vn_len = split_len;
-        for (int i = 0; i < syntax->vn_len; i++)
-        {
-            align_left(syntax->vn[i], 0);
-            hput(vmap, syntax->vn[i], i + syntax->vt_len);
-        }
 
         _prod *prod_arr = new_array(_prod, 32);
         _setall(prod_arr, 0);
@@ -86,25 +79,22 @@ int main(int argc, const char **argv[])
 
             int len, start = 0;
             align_left(line, ri - line);
-            prod_arr[prod_arr_size].l = (long long)hget(vmap, line);
+            hget(vmap, line, &v);
+            prod_arr[prod_arr_size].l = v.id;
             ri += 2;
             len = strlen(align_left(ri, 0));
 
-            int *r = new_array(int, len);
-            _setall(r, 0);
+            _init_new_arr(r, _v, len, 0);
 
             pos = 0;
             while (ri[pos])
             {
-                r[pos] = (long)hget(vmap, &ri[pos]);
-                assert(r[pos] != 0);
+                hget(vmap, &ri[pos], &r[pos]);
                 pos++;
             }
             prod_arr[prod_arr_size].r = r;
             prod_arr[prod_arr_size].r_len = pos;
             prod_arr_size++;
-
-            //--------------------------
         }
 
         fclose(fp);
@@ -116,18 +106,20 @@ int main(int argc, const char **argv[])
         // check part-------------
 
         printf("\ncheck\n\n");
-        printf("{ \\0 [0]  ");
+        printf("{ \\0 [t0]  ");
         int temp = syntax->vt_len;
-        for (int i = 1; i <= temp; i++)
+        for (int i = 1; i < temp; i++)
         {
-            printf(", %s [%d] ", (char *)syntax->vt[i].patten.ch, (long)hget(vmap, syntax->vt[i].patten.ch));
+            hget(vmap, syntax->vt[i], &v);
+            printf(", %s [%c%d] ", (char *)syntax->vt[i], v.type ? 'n' : 't', v.id);
         }
         printf("}\n");
-
-        printf("{ %s [%d] ", syntax->vn[0], hget(vmap, syntax->vn[0]));
+        hget(vmap, syntax->vn[0], &v);
+        printf("{ %s [%c%d] ", syntax->vn[0], v.type ? 'n' : 't', v.id);
         for (int i = 1; i < syntax->vn_len; i++)
         {
-            printf(", %s [%d] ", syntax->vn[i], hget(vmap, syntax->vn[i]));
+            hget(vmap, syntax->vt[i], &v);
+            printf(", %s [%c%d] ", syntax->vn[i], v.type ? 'n' : 't', v.id);
         }
         printf("}\n\n");
         for (int i = 0; i < syntax->prod_len; i++)
@@ -135,7 +127,7 @@ int main(int argc, const char **argv[])
             _prod p = syntax->prod[i];
             printf("%d -> ", p.l);
             for (int j = 0; j < p.r_len; j++)
-                printf("%d ", p.r[j]);
+                printf("%c%d", p.r[j].type ? 'n' : 't', p.r[j].id);
             printf("\n");
         }
 #endif
@@ -143,13 +135,13 @@ int main(int argc, const char **argv[])
         // NFA_generate(syntax);
         _act act_go_map[2024];
 
-        LR1_old(syntax, act_go_map); // generate action-goto table
-        /////////////////////////////////
-       IFDEBUG print_action_goto_table(syntax, act_go_map);
+        uint rows = LR1(syntax, act_go_map, 0); // generate action-goto table
+                                                /////////////////////////////////
+        IFDEBUG print_action_goto_table(syntax, act_go_map, rows);
 
         /////////////////////////////////////
 
-        void (*func[10])(void *);
+        void *(*func[10])(void *, int);
 
         regist_func;
 
@@ -167,7 +159,7 @@ int main(int argc, const char **argv[])
         }
     }
 
-    // cd /home/mayx/code/tool/my_compiler
+    // cd /home/mayx/code/tool/my_compiler/example/calculator
     //  clear&&make clean&&make&&./test
     return 0;
 }

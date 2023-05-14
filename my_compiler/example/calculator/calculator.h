@@ -5,7 +5,6 @@
     func[2] = mutiply;    \
     func[3] = add;        \
     func[4] = do_nothing;
-    
 
 // i,(,),*,+
 // Z,A
@@ -66,40 +65,45 @@ int next_lexicon(const char *str, int *pos, void *params)
     return 0;
 }
 
-void do_nothing(void *param,int pos)
+void *do_nothing(void *param, int pos)
 {
-    return;
+    return NULL;
 }
-void bracket(void *param,int pos)
+void *bracket(void *param, int pos)
 {
     long *params = param + pos;
     *params = params[1];
+    return NULL;
 }
 
-void add(void *param,int pos)
+void *add(void *param, int pos)
 {
     long *params = param + pos;
     printf(" %d + %d = %d ", params[0], params[2], (params[0] + params[2]));
     *params = (params[0] + params[2]);
+    return NULL;
 }
 
-void minus(void *param,int pos)
+void *minus(void *param, int pos)
 {
     long *params = param + pos;
     printf(" %d - %d = %d ", params[0], params[2], params[0] - params[2]);
     *params = (params[0] - params[2]);
+    return NULL;
 }
 
-void mutiply(void *param,int pos)
+void *mutiply(void *param, int pos)
 {
-    long *params = param + pos;
-    printf(" %d * %d = %d ", params[0], params[2], (params[0] * params[2]));
-    *params = (params[0] * params[2]);
+    long *params = param;
+    printf(" %d[%d] %d * %d = %d ", params, pos, params[pos], params[pos + 2], (params[pos] * params[pos + 2]));
+    params[pos]  = params[pos] * params[pos + 2];
+    return NULL;
 }
 
-void divide(void *param,int pos)
+void *divide(void *param, int pos)
 {
-    long *params = param + pos;
-    printf(" %d / %d = %d ", params[0], params[2], (params[0] / params[2]));
-    *params = (params[0] / params[2]);
+    long *params = param;
+    printf(" %d[%d] %d / %d = %d ", params, pos, params[pos], params[pos + 2], (params[pos] / params[pos + 2]));
+    params[pos]  = params[pos] / params[pos + 2];
+    return NULL;
 }

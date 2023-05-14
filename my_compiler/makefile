@@ -7,8 +7,8 @@ PARENTDIR := ../
 CC := gcc -g 
 
 
-${TARGET_DIR}%.o : %.c
-	cd ${CC} -c $< -o $@ -I ${CONTAINERDIR} -I ${PARENTDIR}
+${TARGET_DIR}syntax.o : syntax.c
+	${CC} -c $< -o $@ -I ${CONTAINERDIR} -I ${PARENTDIR}
 
 ${LIB}: 
 	cd ${CONTAINERDIR} && make

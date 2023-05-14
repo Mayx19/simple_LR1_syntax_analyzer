@@ -47,7 +47,7 @@ int main(int argc, const char **argv[])
     vmap->compare = char_cmp;
     vmap->hash = char_hash;
     // printf("read  %s\n\n",argv[0]);//(char*)argv[i],
-    if (fp = fopen("D:/a.txt", "r"))
+    if (fp = fopen("./a.txt", "r"))
     {
 
         // read vt
@@ -91,14 +91,12 @@ int main(int argc, const char **argv[])
             {
 
                 hget(vmap, &ri[pos], &r[pos]);
-                // assert(r[pos] != 0);
                 pos++;
             }
             prod_arr[prod_arr_size].r = r;
             prod_arr[prod_arr_size].r_len = pos;
             prod_arr_size++;
 
-            //--------------------------
         }
 
         fclose(fp);
@@ -174,7 +172,6 @@ int main(int argc, const char **argv[])
 
         print_action_goto_table(syn, act_go_map2,rows);
         char buffer[1024];
-        // const char * buffer="abc\0";
         int pos = 0;
         lexical_temp *lexical_t = init_lexical_temp(syn, act_go_map2,rows);
         while (gets(buffer))

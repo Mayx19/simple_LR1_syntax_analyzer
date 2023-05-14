@@ -128,7 +128,7 @@ typedef unsigned int uint;
 #define auto_arr_set(type, arr_name, pos, value) \
     {                                            \
         uint __t_pos__ = (pos);                  \
-        _lengthen_to(char, arr_name, __t_pos__); \
+        _lengthen_to(type, arr_name, __t_pos__); \
         arr_name[__t_pos__] = (value);           \
     }
 

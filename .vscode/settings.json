@@ -10,6 +10,7 @@
         "queue.h": "c",
         "stdio.h": "c",
         "hashmap.h": "c",
-        "iterator": "c"
+        "iterator": "c",
+        "calculator.h": "c"
     }
 }

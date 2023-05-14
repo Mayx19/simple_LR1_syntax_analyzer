@@ -289,8 +289,8 @@ void _firstmap_prod(_syntax *g, char *first)
 uint LR1(_syntax *g, _act *action_goto, int cnm)
 {
 #ifdef PRINT_NODE
-    FILE *node_str = fopen("./demo/nodes.js", "w");
-    FILE *edge_str = fopen("./demo/edges.js", "w");
+    FILE *node_str = fopen("../../demo/nodes.js", "w");
+    FILE *edge_str = fopen("../../demo/edges.js", "w");
     if (node_str)
         fprintf(node_str, "nodes= [");
 
@@ -997,7 +997,8 @@ void syntax_analysis(
             PRARMS_STACK_LOG;
             for (int i = 0; i < prod_len; i++)
                 spop(istack);
-            IFDEBUG printf("ptr:[%d]  ", params);
+            PRARMS_STACK_LOG;
+            IFDEBUG printf("params[%d] = %d %d  ", istack->top,params[istack->top],params[istack->top+2]);
             if (func[curr.id])
                 func[curr.id](params, istack->top);
             i_state = *(long *)stack_top(istack);
