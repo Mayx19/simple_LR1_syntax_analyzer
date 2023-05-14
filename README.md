@@ -1,4 +1,5 @@
-LR1 syntax analyzer in《Compiler principle》 implemented by c, convenient for individual learning to understand.
+LR1 syntax analyzer in《Compiler principle》 implemented by c, hope it will be help for individual learning.
+
 Implementation function:
 Generate state machine closures and goto tables.
 g6-based grammar state machine visualization, generated html path: my_compiler/demo/view.html
