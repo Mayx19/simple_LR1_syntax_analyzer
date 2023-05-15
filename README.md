@@ -2,7 +2,7 @@ LR1 syntax analyzer in《Compiler principle》 implemented by c, hope it will be
 
 Implementation function:
  Generating state machine closures and goto tables.
- syntax state machine visualization,generated html path: my_compiler/demo/view.html
+ Syntax state machine visualization,generated html path: my_compiler/demo/view.html
  
  
 And two simple examples of the implementation based on it:
