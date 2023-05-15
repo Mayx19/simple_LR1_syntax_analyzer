@@ -159,7 +159,7 @@ int main(int argc, const char **argv[])
         }
     }
 
-    // cd /home/mayx/code/tool/my_compiler/example/calculator
+    // cd /home/mayx/code/tool/analyzer/example/calculator
     //  clear&&make clean&&make&&./test
     return 0;
 }

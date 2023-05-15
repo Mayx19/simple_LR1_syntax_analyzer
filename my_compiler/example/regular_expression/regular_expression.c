@@ -182,7 +182,7 @@ int main(int argc, const char **argv[])
         }
     }
 
-    // cd /home/mayx/code/tool/my_compiler/example/regular_expression
+    // cd /home/mayx/code/tool/analyzer/example/regular_expression
     //  clear&&make clean&&make&&./test
     //      display curr
     //      display state[curr_input.state_top][0]
