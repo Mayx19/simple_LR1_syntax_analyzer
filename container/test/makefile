@@ -1,7 +1,7 @@
 CC := gcc -g
 TAR := test.exe
 PARENT_DIR :=../
-TARGET_DIR := ../../../target/
+TARGET_DIR := ${PARENT_DIR}target/
 OBJ :=   ${TARGET_DIR}test.o 
 LIB := ${TARGET_DIR}hashmap.o ${TARGET_DIR}tool.o ${TARGET_DIR}datrie.o
 TOOL := tool
