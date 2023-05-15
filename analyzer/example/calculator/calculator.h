@@ -2,8 +2,8 @@
 #define regist_func       \
     func[0] = do_nothing; \
     func[1] = bracket;    \
-    func[2] = mutiply;    \
-    func[3] = add;        \
+    func[2] = calculator; \
+    func[3] = calculator; \
     func[4] = do_nothing;
 
 // i,(,),*,+
@@ -16,11 +16,12 @@
 int next_lexicon(const char *str, int *pos, void *params)
 {
     int len = 0;
+    long *param = params;
+
     while (_is_blank(str[*pos + len]))
         len++;
     if (str[*pos + len] <= '9' && str[*pos + len] >= '0')
     {
-        long *param = params;
         int res = 0;
         while (str[*pos + len] <= '9' && str[*pos + len] >= '0')
         {
@@ -36,27 +37,25 @@ int next_lexicon(const char *str, int *pos, void *params)
     case '(':
         *pos += 1;
         return 2;
-        break;
     case ')':
         *pos += 1;
         return 3;
-        break;
-    case '*':
-        *pos += 1;
-        return 4;
-        break;
     case '-':
         *pos += 1;
+        *param = 0;
         return 5;
-        break;
     case '+':
         *pos += 1;
+        *param = 1;
         return 5;
-        break;
     case '/':
         *pos += 1;
-        return 7;
-        break;
+        *param = 2;
+        return 4;
+    case '*':
+        *pos += 1;
+        *param = 3;
+        return 4;
     default:
         return 0;
         break;
@@ -72,38 +71,29 @@ void *do_nothing(void *param, int pos)
 void *bracket(void *param, int pos)
 {
     long *params = param;
-    printf(" %d[%d] (%d)", params, pos, params[pos+1]);
-    params[pos] = params[pos+1];
+    printf(" %d[%d] (%d)", params, pos, params[pos + 1]);
+    params[pos] = params[pos + 1];
     return NULL;
 }
 
-void *add(void *param, int pos)
+void *calculator(void *param, int pos)
 {
     long *params = param;
-    printf(" %d[%d] %d + %d = %d ", params, pos, params[pos], params[pos + 2], (params[pos] + params[pos + 2]));
-    params[pos]  = params[pos] + params[pos + 2];
-    return NULL;
-}
-
-void *minus(void *param, int pos)
-{
-    long *params = param;
-    printf(" %d[%d] %d - %d = %d ", params, pos, params[pos], params[pos + 2], (params[pos] - params[pos + 2]));
-    params[pos]  = params[pos] - params[pos + 2];
-}
-
-void *mutiply(void *param, int pos)
-{
-    long *params = param;
-    printf(" %d[%d] %d * %d = %d ", params, pos, params[pos], params[pos + 2], (params[pos] * params[pos + 2]));
-    params[pos]  = params[pos] * params[pos + 2];
-    return NULL;
-}
-
-void *divide(void *param, int pos)
-{
-    long *params = param;
-    printf(" %d[%d] %d / %d = %d ", params, pos, params[pos], params[pos + 2], (params[pos] / params[pos + 2]));
-    params[pos]  = params[pos] / params[pos + 2];
+    printf(" %d[%d] %d op(%d) %d", params, pos, params[pos],params[pos+1], params[pos + 2]);
+    switch (params[pos + 1])
+    {
+    case 0:
+        params[pos] = params[pos] - params[pos + 2];
+        break;
+    case 1:
+        params[pos] = params[pos] + params[pos + 2];
+        break;
+    case 2:
+        params[pos] = params[pos] / params[pos + 2];
+        break;
+    case 3:
+        params[pos] = params[pos] * params[pos + 2];
+        break;
+    }
     return NULL;
 }
