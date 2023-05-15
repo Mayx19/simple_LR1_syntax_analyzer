@@ -71,25 +71,25 @@ void *do_nothing(void *param, int pos)
 }
 void *bracket(void *param, int pos)
 {
-    long *params = param + pos;
-    *params = params[1];
+    long *params = param;
+    printf(" %d[%d] (%d)", params, pos, params[pos+1]);
+    params[pos] = params[pos+1];
     return NULL;
 }
 
 void *add(void *param, int pos)
 {
-    long *params = param + pos;
-    printf(" %d + %d = %d ", params[0], params[2], (params[0] + params[2]));
-    *params = (params[0] + params[2]);
+    long *params = param;
+    printf(" %d[%d] %d + %d = %d ", params, pos, params[pos], params[pos + 2], (params[pos] + params[pos + 2]));
+    params[pos]  = params[pos] + params[pos + 2];
     return NULL;
 }
 
 void *minus(void *param, int pos)
 {
-    long *params = param + pos;
-    printf(" %d - %d = %d ", params[0], params[2], params[0] - params[2]);
-    *params = (params[0] - params[2]);
-    return NULL;
+    long *params = param;
+    printf(" %d[%d] %d - %d = %d ", params, pos, params[pos], params[pos + 2], (params[pos] - params[pos + 2]));
+    params[pos]  = params[pos] - params[pos + 2];
 }
 
 void *mutiply(void *param, int pos)

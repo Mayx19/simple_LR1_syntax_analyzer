@@ -22,17 +22,6 @@
 
 typedef uint32_t uint;
 
-// struct _vt
-// {
-//     unsigned char type;
-//     union _patten
-//     {
-//         uint8 type;
-//         uint (*compare)(void *);
-//         char *ch;
-//     } patten;
-// } typedef _vt;
-
 struct _act
 {
     char type;
@@ -117,8 +106,6 @@ char *syntax_get_v(_syntax *g, uint32 i);
 char *syntax_t_get_v(_syntax *g, uint32 i, char type);
 
 void update_action_goto_r(_syntax *g, _i *it, char *first, _act *action_goto);
-
-uint merge_single_chain(_syntax *syntax, _act *act_go_map, uint i_count,uint ** shortcut_str_res);
 
 void print_action_goto_table(_syntax *syntax, _act *act_go_map, uint i_count);
 
