@@ -22,7 +22,6 @@ uint32 max_prod_r_len(_syntax *g)
     }
     return mw;
 }
-//
 
 uint32 icompare(void *a, void *b)
 {
@@ -45,12 +44,8 @@ uint32 ihash(void *a)
     return hash;
 }
 
-void next_map(_syntax *g, char *first)
-{
-}
 char *get_null_list(_syntax *g)
 {
-    printf("nmnmnm\n");
     _init_new_arr(null_list, char, g->vn_len, -1);
     stack *s = new_stack(32, int);
     int i, prod_id, curr, find = 0, prod_len;
