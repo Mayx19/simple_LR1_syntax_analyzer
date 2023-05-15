@@ -1,9 +1,11 @@
 LR1 syntax analyzer in《Compiler principle》 implemented by c, hope it will be help for individual learning.
 
 Implementation function:
-Generate state machine closures and goto tables.
-g6-based grammar state machine visualization, generated html path: my_compiler/demo/view.html
-And two simple examples of the implementation on top of it:
+ Generating state machine closures and goto tables.
+ syntax state machine visualization,generated html path: my_compiler/demo/view.html
+ 
+ 
+And two simple examples of the implementation based on it:
 1. The positive integer calculator: my_compiler/example/calculator
 2. Regular expression: my_compiler/example/regular_expression
 You can just make and run the test.exe file.
